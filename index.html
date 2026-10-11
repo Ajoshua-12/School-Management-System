@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#123b68">
+<title>School Management System</title>
+<style>
+:root{--navy:#123b68;--blue:#2166b1;--pale:#eaf2fb;--bg:#f4f7fb;--card:#fff;--text:#172334;--muted:#66758a;--line:#dce5ef;--green:#18864b;--red:#c43d4b;--amber:#a66b00}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:linear-gradient(120deg,#102f54,#2166b1);color:white;padding:22px max(18px,calc((100% - 1180px)/2));}
+.brand{display:flex;align-items:center;gap:13px}.logo{font-size:30px;background:#ffffff20;border-radius:12px;padding:8px 12px}h1{font-size:clamp(21px,3vw,30px);margin:0}header p{margin:3px 0 0;color:#e3efff}
+.layout{max-width:1180px;margin:auto;padding:18px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px}
+aside{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;height:max-content;position:sticky;top:12px}
+.navbtn{display:flex;width:100%;border:0;background:transparent;color:var(--text);text-align:left;padding:12px;border-radius:10px;margin:3px 0;cursor:pointer;font:inherit;gap:10px;align-items:center}
+.navbtn:hover{background:var(--pale)}.navbtn.active{background:var(--navy);color:white}
+main{min-width:0}.topline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 16px;flex-wrap:wrap}h2{font-size:21px;margin:0}h3{font-size:16px;margin:0 0 10px}.muted{color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}.stat,.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}.stat .symbol{font-size:22px}.stat strong{display:block;font-size:28px;line-height:1.25;margin:8px 0 2px}.stat span{color:var(--muted);font-size:13px}
+.columns{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card{margin-bottom:14px}
+label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10px 0 5px}input,select{width:100%;padding:10px 11px;border:1px solid #cbd7e5;border-radius:8px;background:#fff;color:var(--text);font:inherit;min-height:42px}input:focus,select:focus{outline:2px solid #9bc4f5;border-color:var(--blue)}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}.span2{grid-column:1/-1}.btn{border:0;border-radius:8px;background:var(--blue);color:#fff;padding:10px 14px;font:inherit;cursor:pointer;margin-top:12px}.btn:hover{filter:brightness(.94)}.btn.secondary{background:#e8eef6;color:var(--navy)}.btn.danger{background:#fff0f1;color:var(--red)}.btn.small{font-size:12px;padding:6px 9px;margin:0}.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.toolbar input{max-width:280px}
+.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.03em}tbody tr:hover{background:#f8fbff}.pill{display:inline-block;padding:3px 8px;border-radius:20px;font-size:12px;background:#edf2f8}.pill.good{background:#e4f7eb;color:#116c3a}.pill.bad{background:#fff0f1;color:#a92231}.empty{padding:22px;text-align:center;color:var(--muted)}.notice{background:#fff8e8;border:1px solid #f1d89a;color:#795500;padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:14px}.rowitem{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.rowitem:last-child{border-bottom:0}.footer{color:var(--muted);font-size:12px;text-align:center;padding:12px}
+@media(max-width:850px){.layout{grid-template-columns:1fr;padding:12px}aside{position:static;display:flex;overflow-x:auto;gap:4px;padding:7px}.navbtn{white-space:nowrap;width:auto;padding:10px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.columns{grid-template-columns:1fr}}
+@media(max-width:480px){.formgrid{grid-template-columns:1fr}.span2{grid-column:auto}.stat,.card{padding:13px}.grid{gap:8px}.stat strong{font-size:24px}header{padding:18px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="logo">🏫</div><div><h1>School Management System</h1><p>KG · Primary · Junior High School</p></div></div></header>
+<div class="layout">
+<aside id="navigation" aria-label="Main navigation"></aside>
+<main id="app" aria-live="polite"></main>
+</div>
+<div class="footer">Starter version · Data is saved only in this browser on this device.</div>
+<script>
+"use strict";
+const TABS=[["Dashboard","▦"],["Students","👩‍🎓"],["Teachers","👩‍🏫"],["Attendance","✓"],["Grades","📊"]];
+const STORE_KEY="schoolManagementStarter_v1";
+let tab="Dashboard", studentSearch="", teacherSearch="", attendanceDate=localDate(), attendanceClass="", gradeStudent="";
+let data={students:[],teachers:[],attendance:{},grades:[]};
+try{const stored=localStorage.getItem(STORE_KEY);if(stored){const parsed=JSON.parse(stored);data={...data,...parsed};}}catch(e){console.warn("Saved data could not be read.",e);}
+function localDate(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(data));return true}catch(e){alert("Could not save data in this browser. Export a backup and check available storage.");return false}}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function grade(score){return score>=80?"A":score>=70?"B":score>=60?"C":score>=50?"D":"F"}
+function studentName(id){return data.students.find(s=>s.id===id)?.name||"Removed student"}
+function classes(){return [...new Set(data.students.map(s=>s.cls).filter(Boolean))].sort((a,b)=>a.localeCompare(b))}
+function nav(){document.getElementById("navigation").innerHTML=TABS.map(([name,icon])=>`<button class="navbtn ${tab===name?"active":""}" onclick="go('${name}')"><span>${icon}</span>${name}</button>`).join("")}
+function go(name){tab=name;render()}
+function render(){nav();const views={Dashboard:dashboard,Students:studentsView,Teachers:teachersView,Attendance:attendanceView,Grades:gradesView};document.getElementById("app").innerHTML=views[tab]();}
+
+function dashboard(){
+ const rec=data.attendance[localDate()]||{},marked=Object.values(rec),present=marked.filter(x=>x==="P").length;
+ const attendance=marked.length?Math.round(present/marked.length*100)+"%":"—";
+ const avg=data.grades.length?Math.round(data.grades.reduce((sum,g)=>sum+Number(g.score),0)/data.grades.length)+"%":"—";
+ const byClass={};data.students.forEach(s=>byClass[s.cls]=(byClass[s.cls]||0)+1);
+ const classRows=Object.keys(byClass).sort().map(c=>`<div class="rowitem"><span>${esc(c)}</span><strong>${byClass[c]}</strong></div>`).join("")||'<div class="empty">Register students to see class totals.</div>';
+ const recent=data.grades.slice(-5).reverse().map(g=>`<div class="rowitem"><span>${esc(studentName(g.sid))}<small class="muted" style="display:block">${esc(g.subject)}</small></span><strong>${g.score}% · ${grade(g.score)}</strong></div>`).join("")||'<div class="empty">No scores recorded yet.</div>';
+ return `<div class="topline"><div><h2>Dashboard</h2><div class="muted">A quick overview of your school records.</div></div><button class="btn secondary" onclick="exportData()">⬇ Export backup</button></div>
+ <div class="notice"><strong>Important:</strong> This starter version stores information in this browser only. It is not yet connected to a shared database or protected by user accounts. Do not enter sensitive real student information until a secure backend is added.</div>
+ <div class="grid">
+ <div class="stat"><div class="symbol">👩‍🎓</div><strong>${data.students.length}</strong><span>Registered students</span></div>
+ <div class="stat"><div class="symbol">👩‍🏫</div><strong>${data.teachers.length}</strong><span>Teachers</span></div>
+ <div class="stat"><div class="symbol">✓</div><strong>${attendance}</strong><span>Attendance marked today</span></div>
+ <div class="stat"><div class="symbol">📊</div><strong>${avg}</strong><span>Average recorded score</span></div></div>
+ <div class="columns"><section class="card"><h3>Students by class</h3>${classRows}</section><section class="card"><h3>Recent scores</h3>${recent}</section></div>`;
+}
+function studentsView(){
+ const list=data.students.filter(s=>(s.name+" "+s.cls+" "+(s.phone||"")).toLowerCase().includes(studentSearch.toLowerCase()));
+ const rows=list.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.cls)}</td><td>${esc(s.phone||"—")}</td><td><button class="btn small secondary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn small danger" onclick="deleteStudent('${s.id}')">Remove</button></td></tr>`).join("")||'<tr><td colspan="4" class="empty">No students found.</td></tr>';
+ return `<div class="topline"><div><h2>Students</h2><div class="muted">Register and maintain learner records.</div></div></div>
+ <section class="card"><h3 id="studentFormTitle">Add a student</h3><input type="hidden" id="studentId"><div class="formgrid"><div><label for="studentName">Full name *</label><input id="studentName" maxlength="100" placeholder="Learner's full name"></div><div><label for="studentClass">Class *</label><input id="studentClass" maxlength="40" placeholder="e.g. Basic 7"></div><div class="span2"><label for="studentPhone">Parent/guardian phone (optional)</label><input id="studentPhone" maxlength="30" inputmode="tel" placeholder="Phone number"></div></div><button class="btn" onclick="saveStudent()">Save student</button> <button class="btn secondary" onclick="clearStudentForm()">Clear</button></section>
+ <section class="card"><div class="toolbar"><h3 style="margin:0">Student register</h3><input aria-label="Search students" placeholder="Search name, class or phone…" value="${esc(studentSearch)}" oninput="studentSearch=this.value;refreshStudentTable()"></div><div class="tablewrap"><table><thead><tr><th>Name</th><th>Class</th><th>Guardian phone</th><th>Actions</th></tr></thead><tbody id="studentRows">${rows}</tbody></table></div></section>`;
+}
+function refreshStudentTable(){const el=document.getElementById("studentRows");if(!el)return;el.innerHTML=data.students.filter(s=>(s.name+" "+s.cls+" "+(s.phone||"")).toLowerCase().includes(studentSearch.toLowerCase())).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.cls)}</td><td>${esc(s.phone||"—")}</td><td><button class="btn small secondary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn small danger" onclick="deleteStudent('${s.id}')">Remove</button></td></tr>`).join("")||'<tr><td colspan="4" class="empty">No students found.</td></tr>'}
+function clearStudentForm(){document.getElementById("studentId").value="";document.getElementById("studentName").value="";document.getElementById("studentClass").value="";document.getElementById("studentPhone").value="";document.getElementById("studentFormTitle").textContent="Add a student"}
+function saveStudent(){const id=document.getElementById("studentId").value,name=document.getElementById("studentName").value.trim(),cls=document.getElementById("studentClass").value.trim(),phone=document.getElementById("studentPhone").value.trim();if(!name||!cls){alert("Please enter the student's full name and class.");return}if(id){const s=data.students.find(x=>x.id===id);if(s)Object.assign(s,{name,cls,phone})}else data.students.push({id:uid(),name,cls,phone});if(save()){clearStudentForm();render()}}
+function editStudent(id){const s=data.students.find(x=>x.id===id);if(!s)return;document.getElementById("studentId").value=s.id;document.getElementById("studentName").value=s.name;document.getElementById("studentClass").value=s.cls;document.getElementById("studentPhone").value=s.phone||"";document.getElementById("studentFormTitle").textContent="Edit student";document.getElementById("studentName").focus();window.scrollTo({top:0,behavior:"smooth"})}
+function deleteStudent(id){if(!confirm("Remove this student and their attendance and grade records?"))return;data.students=data.students.filter(s=>s.id!==id);data.grades=data.grades.filter(g=>g.sid!==id);Object.values(data.attendance).forEach(rec=>delete rec[id]);save();render()}
+
+function teachersView(){
+ const list=data.teachers.filter(t=>(t.name+" "+t.subject+" "+t.phone).toLowerCase().includes(teacherSearch.toLowerCase()));
+ const rows=list.map(t=>`<tr><td>${esc(t.name)}</td><td>${esc(t.subject||"—")}</td><td>${esc(t.phone||"—")}</td><td><button class="btn small secondary" onclick="editTeacher('${t.id}')">Edit</button> <button class="btn small danger" onclick="deleteTeacher('${t.id}')">Remove</button></td></tr>`).join("")||'<tr><td colspan="4" class="empty">No teachers found.</td></tr>';
+ return `<div class="topline"><div><h2>Teachers</h2><div class="muted">Maintain a simple staff register.</div></div></div><section class="card"><h3 id="teacherFormTitle">Add a teacher</h3><input type="hidden" id="teacherId"><div class="formgrid"><div><label for="teacherName">Full name *</label><input id="teacherName" maxlength="100" placeholder="Teacher's full name"></div><div><label for="teacherSubject">Subject / responsibility</label><input id="teacherSubject" maxlength="80" placeholder="e.g. Mathematics"></div><div class="span2"><label for="teacherPhone">Phone (optional)</label><input id="teacherPhone" maxlength="30" inputmode="tel" placeholder="Phone number"></div></div><button class="btn" onclick="saveTeacher()">Save teacher</button> <button class="btn secondary" onclick="clearTeacherForm()">Clear</button></section><section class="card"><div class="toolbar"><h3 style="margin:0">Staff register</h3><input aria-label="Search teachers" placeholder="Search teachers…" value="${esc(teacherSearch)}" oninput="teacherSearch=this.value;refreshTeacherTable()"></div><div class="tablewrap"><table><thead><tr><th>Name</th><th>Subject / role</th><th>Phone</th><th>Actions</th></tr></thead><tbody id="teacherRows">${rows}</tbody></table></div></section>`;
+}
+function refreshTeacherTable(){const el=document.getElementById("teacherRows");if(!el)return;el.innerHTML=data.teachers.filter(t=>(t.name+" "+t.subject+" "+t.phone).toLowerCase().includes(teacherSearch.toLowerCase())).map(t=>`<tr><td>${esc(t.name)}</td><td>${esc(t.subject||"—")}</td><td>${esc(t.phone||"—")}</td><td><button class="btn small secondary" onclick="editTeacher('${t.id}')">Edit</button> <button class="btn small danger" onclick="deleteTeacher('${t.id}')">Remove</button></td></tr>`).join("")||'<tr><td colspan="4" class="empty">No teachers found.</td></tr>'}
+function clearTeacherForm(){document.getElementById("teacherId").value="";document.getElementById("teacherName").value="";document.getElementById("teacherSubject").value="";document.getElementById("teacherPhone").value="";document.getElementById("teacherFormTitle").textContent="Add a teacher"}
+function saveTeacher(){const id=document.getElementById("teacherId").value,name=document.getElementById("teacherName").value.trim(),subject=document.getElementById("teacherSubject").value.trim(),phone=document.getElementById("teacherPhone").value.trim();if(!name){alert("Please enter the teacher's full name.");return}if(id){const t=data.teachers.find(x=>x.id===id);if(t)Object.assign(t,{name,subject,phone})}else data.teachers.push({id:uid(),name,subject,phone});if(save())render()}
+function editTeacher(id){const t=data.teachers.find(x=>x.id===id);if(!t)return;document.getElementById("teacherId").value=t.id;document.getElementById("teacherName").value=t.name;document.getElementById("teacherSubject").value=t.subject||"";document.getElementById("teacherPhone").value=t.phone||"";document.getElementById("teacherFormTitle").textContent="Edit teacher";window.scrollTo({top:0,behavior:"smooth"})}
+function deleteTeacher(id){if(!confirm("Remove this teacher from the register?"))return;data.teachers=data.teachers.filter(t=>t.id!==id);save();render()}
+
+function attendanceView(){
+ const cls=classes();if(!cls.length)return `<div class="topline"><div><h2>Attendance</h2><div class="muted">Record daily attendance by class.</div></div></div><div class="card empty">Register students and assign them to a class first.</div>`;
+ if(!cls.includes(attendanceClass))attendanceClass=cls[0];
+ const rec=data.attendance[attendanceDate]||{};
+ const learners=data.students.filter(s=>s.cls===attendanceClass);
+ const marked=learners.filter(s=>rec[s.id]).length;
+ const rows=learners.map(s=>{const v=rec[s.id];return `<div class="rowitem"><span>${esc(s.name)}</span><span><button class="btn small ${v==="P"?"":"secondary"}" onclick="markAttendance('${s.id}','P')">Present</button> <button class="btn small ${v==="A"?"danger":"secondary"}" onclick="markAttendance('${s.id}','A')">Absent</button></span></div>`}).join("");
+ return `<div class="topline"><div><h2>Attendance</h2><div class="muted">Mark each learner present or absent.</div></div><span class="pill">${marked}/${learners.length} marked</span></div><section class="card"><div class="formgrid"><div><label for="attDate">Date</label><input id="attDate" type="date" value="${attendanceDate}" onchange="attendanceDate=this.value;render()"></div><div><label for="attClass">Class</label><select id="attClass" onchange="attendanceClass=this.value;render()">${cls.map(c=>`<option ${c===attendanceClass?"selected":""} value="${esc(c)}">${esc(c)}</option>`).join("")}</select></div></div><div class="toolbar" style="margin-top:12px"><button class="btn secondary" onclick="markAll('P')">Mark all present</button><button class="btn secondary" onclick="clearAttendance()">Clear this class/date</button></div></section><section class="card"><h3>${esc(attendanceClass)} · ${esc(attendanceDate)}</h3>${rows}</section>`;
+}
+function markAttendance(id,value){if(!data.attendance[attendanceDate])data.attendance[attendanceDate]={};data.attendance[attendanceDate][id]=value;save();render()}
+function markAll(value){if(!data.attendance[attendanceDate])data.attendance[attendanceDate]={};data.students.filter(s=>s.cls===attendanceClass).forEach(s=>data.attendance[attendanceDate][s.id]=value);save();render()}
+function clearAttendance(){if(!confirm("Clear attendance marks for this class and date?"))return;const rec=data.attendance[attendanceDate]||{};data.students.filter(s=>s.cls===attendanceClass).forEach(s=>delete rec[s.id]);save();render()}
+
+function gradesView(){
+ if(!data.students.length)return `<div class="topline"><div><h2>Grades</h2><div class="muted">Record subject scores and view grade summaries.</div></div></div><div class="card empty">Register students first.</div>`;
+ if(!data.students.some(s=>s.id===gradeStudent))gradeStudent=data.students[0].id;
+ const opts=data.students.map(s=>`<option value="${s.id}" ${s.id===gradeStudent?"selected":""}>${esc(s.name)} (${esc(s.cls)})</option>`).join("");
+ const rows=data.grades.slice().reverse().map(g=>`<tr><td>${esc(studentName(g.sid))}</td><td>${esc(g.subject)}</td><td>${g.score}%</td><td><span class="pill">${grade(g.score)}</span></td><td><button class="btn small danger" onclick="deleteGrade('${g.id}')">Remove</button></td></tr>`).join("")||'<tr><td colspan="5" class="empty">No scores recorded yet.</td></tr>';
+ const totals={};data.grades.forEach(g=>{if(!totals[g.sid])totals[g.sid]=[];totals[g.sid].push(Number(g.score))});
+ const rankings=Object.entries(totals).map(([id,scores])=>({name:studentName(id),avg:Math.round(scores.reduce((a,b)=>a+b,0)/scores.length)})).sort((a,b)=>b.avg-a.avg).map((r,i)=>`<div class="rowitem"><span>${i+1}. ${esc(r.name)}</span><strong>${r.avg}% · ${grade(r.avg)}</strong></div>`).join("")||'<div class="empty">Rankings will appear after scores are added.</div>';
+ return `<div class="topline"><div><h2>Grades</h2><div class="muted">Enter scores from 0 to 100.</div></div></div><section class="card"><h3>Record a score</h3><div class="formgrid"><div><label for="gradeStudent">Student</label><select id="gradeStudent" onchange="gradeStudent=this.value">${opts}</select></div><div><label for="gradeSubject">Subject *</label><input id="gradeSubject" maxlength="80" placeholder="e.g. Mathematics"></div><div><label for="gradeScore">Score (0–100) *</label><input id="gradeScore" type="number" min="0" max="100" step="1" placeholder="e.g. 78"></div></div><button class="btn" onclick="saveGrade()">Save score</button></section><section class="card"><h3>Average scores by student</h3>${rankings}</section><section class="card"><h3>All recorded scores</h3><div class="tablewrap"><table><thead><tr><th>Student</th><th>Subject</th><th>Score</th><th>Grade</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+}
+function saveGrade(){const sid=document.getElementById("gradeStudent").value,subject=document.getElementById("gradeSubject").value.trim(),score=Number(document.getElementById("gradeScore").value);if(!subject||document.getElementById("gradeScore").value.trim()===""||!Number.isFinite(score)||score<0||score>100){alert("Enter a subject and a valid score from 0 to 100.");return}data.grades.push({id:uid(),sid,subject,score});gradeStudent=sid;if(save())render()}
+function deleteGrade(id){if(!confirm("Remove this score?"))return;data.grades=data.grades.filter(g=>g.id!==id);save();render()}
+
+function exportData(){const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),data},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="school-management-backup.json";a.click();URL.revokeObjectURL(url)}
+function importData(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const parsed=JSON.parse(reader.result);const incoming=parsed.data||parsed;if(!Array.isArray(incoming.students)||!Array.isArray(incoming.teachers)||!Array.isArray(incoming.grades)||typeof incoming.attendance!=="object")throw new Error("Unexpected format");if(!confirm("Importing replaces the records currently saved in this browser. Continue?"))return;data={students:incoming.students,teachers:incoming.teachers,grades:incoming.grades,attendance:incoming.attendance};save();render();alert("Backup imported.")}catch(e){alert("That file does not look like a valid backup from this system.")}finally{event.target.value=""}};reader.readAsText(file)}
+render();
+</script>
+</body>
+</html>
